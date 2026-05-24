@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Buchstaben-Rennspiel 3D</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="three.min.js"></script>
+</head>
+<body>
+  <div id="game-container">
+    <div id="hud">
+      <span>Punkte: <strong id="score-val">0</strong></span>
+      <span id="lives-val">❤️❤️❤️</span>
+      <span>Wörter: <strong id="words-val">0</strong></span>
+      <span id="level-hud">Level <strong id="level-num">1</strong></span>
+    </div>
+
+    <div id="canvas-wrapper">
+      <canvas id="gameCanvas"></canvas>
+
+      <!-- Dashboard overlay -->
+      <div id="dashboard">
+        <!-- Left: Speedometer -->
+        <div id="dash-left">
+          <div id="speedometer">
+            <svg id="speedo-svg" viewBox="0 0 100 65" width="96" height="64">
+              <defs>
+                <filter id="glow">
+                  <feGaussianBlur stdDeviation="1.5" result="blur"/>
+                  <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+                </filter>
+              </defs>
+              <!-- Arc track -->
+              <path d="M 12 58 A 43 43 0 0 1 88 58" fill="none" stroke="#2a2a2a" stroke-width="7" stroke-linecap="round"/>
+              <!-- Speed zones -->
+              <path d="M 12 58 A 43 43 0 0 1 50 15" fill="none" stroke="#4ecca322" stroke-width="5" stroke-linecap="round"/>
+              <path d="M 50 15 A 43 43 0 0 1 88 58" fill="none" stroke="#e9456022" stroke-width="5" stroke-linecap="round"/>
+              <!-- Needle -->
+              <line id="speed-needle" x1="50" y1="58" x2="50" y2="18"
+                stroke="#e94560" stroke-width="2.5" stroke-linecap="round"
+                style="transform-origin: 50px 58px; transform: rotate(-120deg)"/>
+              <!-- Hub -->
+              <circle cx="50" cy="58" r="4.5" fill="#e94560"/>
+              <circle cx="50" cy="58" r="2" fill="#fff"/>
+            </svg>
+            <div id="speed-num">0</div>
+            <div class="dash-label">km/h</div>
+          </div>
+        </div>
+
+        <!-- Center: Steering wheel -->
+        <div id="dash-center">
+          <div id="steering-wheel">
+            <svg viewBox="0 0 120 120" width="108" height="108">
+              <!-- Outer ring -->
+              <circle cx="60" cy="60" r="52" fill="none" stroke="#5c2e00" stroke-width="13"/>
+              <circle cx="60" cy="60" r="52" fill="none" stroke="#8B4513" stroke-width="10"/>
+              <!-- Spokes -->
+              <line x1="60" y1="9" x2="60" y2="43" stroke="#7a3b10" stroke-width="9" stroke-linecap="round"/>
+              <line x1="60" y1="77" x2="60" y2="111" stroke="#7a3b10" stroke-width="9" stroke-linecap="round"/>
+              <line x1="9" y1="60" x2="43" y2="60" stroke="#7a3b10" stroke-width="9" stroke-linecap="round"/>
+              <line x1="77" y1="60" x2="111" y2="60" stroke="#7a3b10" stroke-width="9" stroke-linecap="round"/>
+              <!-- Hub -->
+              <circle cx="60" cy="60" r="14" fill="#6B3A1F"/>
+              <circle cx="60" cy="60" r="8" fill="#3a1800"/>
+              <circle cx="60" cy="60" r="3" fill="#8B4513"/>
+            </svg>
+          </div>
+        </div>
+
+        <!-- Right: Word symbol + letter slots -->
+        <div id="dash-right">
+          <div id="word-emoji">❓</div>
+          <div id="word-display"></div>
+        </div>
+      </div>
+
+      <!-- In-game floating message -->
+      <div id="game-message"></div>
+
+      <!-- Start / Game-Over overlay -->
+      <div id="overlay">
+        <h2>⛏ Buchstaben-Rennspiel 3D</h2>
+        <p>Sammle die Buchstaben des gesuchten Wortes ein!</p>
+        <p>Das Symbol rechts im Armaturenbrett zeigt das Wort.</p>
+        <p class="controls-line">⬆ Gas &nbsp;|&nbsp; ⬇ Bremsen &nbsp;|&nbsp; ⬅ ➡ Lenken</p>
+        <div id="level-select">
+          <p>Level wählen:</p>
+          <div class="level-btns">
+            <button class="btn level-btn active" data-level="1">
+              <span class="level-title">Level 1</span>
+              <span class="level-desc">Buchstaben einzeln</span>
+            </button>
+            <button class="btn level-btn secondary" data-level="2">
+              <span class="level-title">Level 2</span>
+              <span class="level-desc">Alle auf einmal</span>
+            </button>
+          </div>
+        </div>
+        <div>
+          <button class="btn success" id="btn-start">Spiel starten</button>
+          <a href="admin.html" class="btn secondary">Wörter verwalten</a>
+        </div>
+      </div>
+    </div>
+
+    <div id="controls-hint">
+      Pfeiltasten zum Steuern &nbsp;|&nbsp;
+      <a href="admin.html" style="color:#4ecca3">Wörter verwalten</a>
+    </div>
+  </div>
+
+  <script src="words-data.js"></script>
+  <script src="game.js"></script>
+</body>
+</html>

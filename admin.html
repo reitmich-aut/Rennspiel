@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Wörter-Verwaltung</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="admin-container">
+    <div class="admin-header">
+      <h1>Wörter-Verwaltung</h1>
+      <a href="index.html" class="btn secondary">← Zurück zum Spiel</a>
+    </div>
+
+    <!-- Stats -->
+    <div class="card">
+      <div class="stats-row" id="stats-row">
+        <div class="stat-box"><div class="num" id="stat-total">0</div><div class="lbl">Wörter gesamt</div></div>
+        <div class="stat-box"><div class="num" id="stat-easy">0</div><div class="lbl">Leicht</div></div>
+        <div class="stat-box"><div class="num" id="stat-medium">0</div><div class="lbl">Mittel</div></div>
+        <div class="stat-box"><div class="num" id="stat-hard">0</div><div class="lbl">Schwer</div></div>
+        <div class="stat-box"><div class="num" id="stat-cats">0</div><div class="lbl">Kategorien</div></div>
+      </div>
+    </div>
+
+    <!-- Add / Edit Word -->
+    <div class="card" id="form-card">
+      <h2 id="form-title">Neues Wort hinzufügen</h2>
+      <div class="form-row">
+        <div class="field" style="flex:2">
+          <label for="input-word">Wort *</label>
+          <input type="text" id="input-word" placeholder="z.B. SCHMETTERLING" maxlength="20">
+        </div>
+        <div class="field" style="flex:2">
+          <label for="input-hint">Tipp / Bedeutung</label>
+          <input type="text" id="input-hint" placeholder="z.B. Bunter Schmetterling">
+        </div>
+        <div class="field" style="flex:0 0 110px">
+          <label for="input-emoji">Emoji / Symbol</label>
+          <input type="text" id="input-emoji" placeholder="🐱" maxlength="8"
+            style="font-size:1.8rem;text-align:center;padding:4px;line-height:1.2;font-family:sans-serif"
+            title="Emoji eingeben: Windows-Taste + Punkt (Win+.) öffnet den Emoji-Picker">
+          <span style="font-size:0.42rem;color:#888;margin-top:2px">Win+. für Emoji-Picker</span>
+        </div>
+        <div class="field">
+          <label for="input-category">Kategorie</label>
+          <input type="text" id="input-category" placeholder="z.B. Natur" list="category-list">
+          <datalist id="category-list"></datalist>
+        </div>
+        <div class="field">
+          <label for="input-difficulty">Schwierigkeit</label>
+          <select id="input-difficulty">
+            <option value="easy">Leicht</option>
+            <option value="medium" selected>Mittel</option>
+            <option value="hard">Schwer</option>
+          </select>
+        </div>
+      </div>
+      <div style="margin-top:12px; display:flex; gap:8px; flex-wrap:wrap; align-items:center">
+        <button class="btn" id="btn-save">Wort speichern</button>
+        <button class="btn secondary" id="btn-cancel" style="display:none">Abbrechen</button>
+        <span id="form-error" style="color:#e94560; font-size:0.85rem"></span>
+      </div>
+    </div>
+
+    <!-- Bulk Import -->
+    <div class="card">
+      <h2>Wörter importieren (eine pro Zeile)</h2>
+      <div class="form-row">
+        <div class="field" style="flex:3">
+          <label for="bulk-input">Wörter (Format: Wort | Tipp | Kategorie | Schwierigkeit | Emoji)</label>
+          <textarea id="bulk-input" placeholder="KATZE | Haustier | Tiere | easy | 🐱&#10;HUND | Bester Freund | Tiere | easy | 🐶&#10;SCHULE | Lernen | Orte | medium | 🏫"></textarea>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px;justify-content:flex-end">
+          <button class="btn" id="btn-bulk">Importieren</button>
+          <button class="btn secondary" id="btn-export">Exportieren</button>
+          <button class="btn secondary" id="btn-reset" style="color:#e94560">Zurücksetzen</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Word List -->
+    <div class="card">
+      <h2>Wortliste <span class="badge" id="list-count">0</span></h2>
+
+      <div id="category-filter"></div>
+
+      <div id="word-list-container">
+        <div class="empty-state">Noch keine Wörter vorhanden.</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast">Gespeichert!</div>
+
+  <script src="words-data.js"></script>
+  <script>
+    let words = [];
+    let editId = null;
+    let filterCategory = 'all';
+
+    function init() {
+      words = loadWords();
+      renderAll();
+      document.getElementById('btn-save').addEventListener('click', saveWord);
+      document.getElementById('btn-cancel').addEventListener('click', cancelEdit);
+      document.getElementById('btn-bulk').addEventListener('click', bulkImport);
+      document.getElementById('btn-export').addEventListener('click', exportWords);
+      document.getElementById('btn-reset').addEventListener('click', resetWords);
+    }
+
+    function renderAll() {
+      renderStats();
+      renderFilters();
+      renderWordList();
+      updateCategoryDatalist();
+    }
+
+    function renderStats() {
+      document.getElementById('stat-total').textContent = words.length;
+      document.getElementById('stat-easy').textContent = words.filter(w => w.difficulty === 'easy').length;
+      document.getElementById('stat-medium').textContent = words.filter(w => w.difficulty === 'medium').length;
+      document.getElementById('stat-hard').textContent = words.filter(w => w.difficulty === 'hard').length;
+      const cats = new Set(words.map(w => w.category).filter(Boolean));
+      document.getElementById('stat-cats').textContent = cats.size;
+    }
+
+    function getCategories() {
+      const cats = new Set(words.map(w => w.category).filter(Boolean));
+      return Array.from(cats).sort();
+    }
+
+    function renderFilters() {
+      const cats = getCategories();
+      const container = document.getElementById('category-filter');
+      container.innerHTML = '';
+      const allBtn = document.createElement('button');
+      allBtn.className = 'filter-btn' + (filterCategory === 'all' ? ' active' : '');
+      allBtn.textContent = 'Alle';
+      allBtn.onclick = () => { filterCategory = 'all'; renderAll(); };
+      container.appendChild(allBtn);
+      for (const cat of cats) {
+        const btn = document.createElement('button');
+        btn.className = 'filter-btn' + (filterCategory === cat ? ' active' : '');
+        btn.textContent = cat;
+        btn.onclick = () => { filterCategory = cat; renderAll(); };
+        container.appendChild(btn);
+      }
+    }
+
+    function renderWordList() {
+      const filtered = filterCategory === 'all' ? words : words.filter(w => w.category === filterCategory);
+      document.getElementById('list-count').textContent = filtered.length;
+      const container = document.getElementById('word-list-container');
+      if (filtered.length === 0) {
+        container.innerHTML = '<div class="empty-state">Keine Wörter in dieser Kategorie.</div>';
+        return;
+      }
+      container.innerHTML = '<div class="word-list"></div>';
+      const list = container.querySelector('.word-list');
+      for (const word of filtered) {
+        list.appendChild(createWordCard(word));
+      }
+    }
+
+    function diffLabel(d) {
+      return d === 'easy' ? 'Leicht' : d === 'medium' ? 'Mittel' : 'Schwer';
+    }
+
+    function createWordCard(word) {
+      const card = document.createElement('div');
+      card.className = 'word-card';
+      card.dataset.id = word.id;
+      card.innerHTML = `
+        <div style="display:flex;align-items:center;gap:8px">
+          ${word.emoji ? `<span class="word-emoji-badge">${word.emoji}</span>` : ''}
+          <span class="word-text">${word.word.toUpperCase()}</span>
+        </div>
+        <div class="word-hint">${word.hint || '<em style="color:#555">Kein Tipp</em>'}</div>
+        <div class="word-meta">
+          ${word.category ? `<strong>${word.category}</strong> &nbsp;|&nbsp; ` : ''}
+          <span class="badge ${word.difficulty}">${diffLabel(word.difficulty)}</span>
+          &nbsp; ${word.word.length} Buchstaben
+        </div>
+        <div class="actions">
+          <button class="btn-sm" onclick="editWord(${word.id})">Bearbeiten</button>
+          <button class="btn-sm danger" onclick="deleteWord(${word.id})">Löschen</button>
+        </div>
+      `;
+      return card;
+    }
+
+    function updateCategoryDatalist() {
+      const dl = document.getElementById('category-list');
+      dl.innerHTML = '';
+      for (const cat of getCategories()) {
+        const opt = document.createElement('option');
+        opt.value = cat;
+        dl.appendChild(opt);
+      }
+    }
+
+    function saveWord() {
+      const wordVal = document.getElementById('input-word').value.trim().toUpperCase().replace(/[^A-ZÄÖÜ]/g, '');
+      const hint = document.getElementById('input-hint').value.trim();
+      const category = document.getElementById('input-category').value.trim();
+      const difficulty = document.getElementById('input-difficulty').value;
+      const emoji = document.getElementById('input-emoji').value.trim();
+      const errEl = document.getElementById('form-error');
+
+      if (!wordVal || wordVal.length < 2) {
+        errEl.textContent = 'Bitte ein Wort mit mindestens 2 Buchstaben eingeben.';
+        return;
+      }
+      if (wordVal.length > 16) {
+        errEl.textContent = 'Wort darf maximal 16 Buchstaben haben.';
+        return;
+      }
+      errEl.textContent = '';
+
+      if (editId !== null) {
+        const idx = words.findIndex(w => w.id === editId);
+        if (idx >= 0) {
+          words[idx] = { ...words[idx], word: wordVal, hint, category, difficulty, emoji };
+        }
+        editId = null;
+        document.getElementById('form-title').textContent = 'Neues Wort hinzufügen';
+        document.getElementById('btn-save').textContent = 'Wort speichern';
+        document.getElementById('btn-cancel').style.display = 'none';
+      } else {
+        // Check duplicate
+        if (words.some(w => w.word === wordVal)) {
+          errEl.textContent = 'Dieses Wort existiert bereits.';
+          return;
+        }
+        words.push({ id: getNextId(words), word: wordVal, hint, category, difficulty, emoji });
+      }
+
+      saveWords(words);
+      clearForm();
+      renderAll();
+      showToast('Wort gespeichert!');
+    }
+
+    function editWord(id) {
+      const word = words.find(w => w.id === id);
+      if (!word) return;
+      editId = id;
+      document.getElementById('input-word').value = word.word;
+      document.getElementById('input-hint').value = word.hint || '';
+      document.getElementById('input-emoji').value = word.emoji || '';
+      document.getElementById('input-category').value = word.category || '';
+      document.getElementById('input-difficulty').value = word.difficulty || 'medium';
+      document.getElementById('form-title').textContent = 'Wort bearbeiten: ' + word.word;
+      document.getElementById('btn-save').textContent = 'Änderungen speichern';
+      document.getElementById('btn-cancel').style.display = 'inline-block';
+      document.getElementById('form-card').scrollIntoView({ behavior: 'smooth' });
+      document.getElementById('input-word').focus();
+    }
+
+    function cancelEdit() {
+      editId = null;
+      clearForm();
+      document.getElementById('form-title').textContent = 'Neues Wort hinzufügen';
+      document.getElementById('btn-save').textContent = 'Wort speichern';
+      document.getElementById('btn-cancel').style.display = 'none';
+      document.getElementById('form-error').textContent = '';
+    }
+
+    function clearForm() {
+      document.getElementById('input-word').value = '';
+      document.getElementById('input-hint').value = '';
+      document.getElementById('input-emoji').value = '';
+      document.getElementById('input-category').value = '';
+      document.getElementById('input-difficulty').value = 'medium';
+    }
+
+    function deleteWord(id) {
+      if (!confirm('Wort wirklich löschen?')) return;
+      words = words.filter(w => w.id !== id);
+      saveWords(words);
+      renderAll();
+      showToast('Wort gelöscht.');
+    }
+
+    function bulkImport() {
+      const raw = document.getElementById('bulk-input').value.trim();
+      if (!raw) return;
+      const lines = raw.split('\n').map(l => l.trim()).filter(Boolean);
+      let added = 0;
+      for (const line of lines) {
+        const parts = line.split('|').map(p => p.trim());
+        const wordVal = (parts[0] || '').toUpperCase().replace(/[^A-ZÄÖÜ]/g, '');
+        if (!wordVal || wordVal.length < 2) continue;
+        if (words.some(w => w.word === wordVal)) continue;
+        words.push({
+          id: getNextId(words),
+          word: wordVal,
+          hint: parts[1] || '',
+          category: parts[2] || '',
+          difficulty: ['easy','medium','hard'].includes(parts[3]) ? parts[3] : 'medium',
+          emoji: parts[4] || ''
+        });
+        added++;
+      }
+      saveWords(words);
+      renderAll();
+      document.getElementById('bulk-input').value = '';
+      showToast(added + ' Wörter importiert!');
+    }
+
+    function exportWords() {
+      const lines = words.map(w => `${w.word} | ${w.hint || ''} | ${w.category || ''} | ${w.difficulty} | ${w.emoji || ''}`);
+      const text = lines.join('\n');
+      const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'lernwoerter.txt';
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function resetWords() {
+      if (!confirm('Alle Wörter löschen und Standard-Wörter laden?')) return;
+      localStorage.removeItem('racingWords');
+      words = loadWords();
+      saveWords(words);
+      renderAll();
+      showToast('Wörter zurückgesetzt!');
+    }
+
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 2200);
+    }
+
+    init();
+  </script>
+</body>
+</html>
