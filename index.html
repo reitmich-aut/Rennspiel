@@ -84,7 +84,8 @@
         <h2>⛏ Buchstaben-Rennspiel 3D</h2>
         <p>Sammle die Buchstaben des gesuchten Wortes ein!</p>
         <p>Das Symbol rechts im Armaturenbrett zeigt das Wort.</p>
-        <p class="controls-line">⬆ Gas &nbsp;|&nbsp; ⬇ Bremsen &nbsp;|&nbsp; ⬅ ➡ Lenken</p>
+        <p class="controls-line controls-desktop">⬆ Gas &nbsp;|&nbsp; ⬇ Bremsen &nbsp;|&nbsp; ⬅ ➡ Lenken</p>
+        <p class="controls-line controls-mobile">Steuerung: Buttons unten</p>
         <div id="level-select">
           <p>Level wählen:</p>
           <div class="level-btns">
@@ -102,6 +103,18 @@
           <button class="btn success" id="btn-start">Spiel starten</button>
           <a href="admin.html" class="btn secondary">Wörter verwalten</a>
         </div>
+      </div>
+    </div>
+
+    <!-- Touch controls (shown on touch devices via CSS pointer:coarse) -->
+    <div id="touch-controls">
+      <div class="touch-col">
+        <button class="touch-btn" id="touch-left">◀</button>
+        <button class="touch-btn" id="touch-right">▶</button>
+      </div>
+      <div class="touch-col">
+        <button class="touch-btn" id="touch-up">▲</button>
+        <button class="touch-btn" id="touch-down">▼</button>
       </div>
     </div>
 

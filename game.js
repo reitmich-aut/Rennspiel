@@ -98,7 +98,21 @@ function initScene() {
 
   // Decorative trees around oval
   addTrees();
+  resizeRenderer();
 }
+
+// ===== RESPONSIVE RENDERER =====
+function resizeRenderer() {
+  if (!renderer || !camera) return;
+  const wrapper = document.getElementById('canvas-wrapper');
+  const w = Math.max(wrapper.clientWidth,  1);
+  const h = Math.max(wrapper.clientHeight, 1);
+  renderer.setSize(w, h);
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+  if (gameState !== 'playing') renderer.render(scene, camera);
+}
+window.addEventListener('resize', resizeRenderer);
 
 // ===== HELPER: accumulate quad vertices into array =====
 function pushQuad(arr, ax, az, bx, bz, nx, nz, w1, w2, y) {
@@ -547,6 +561,15 @@ document.addEventListener('keydown', e => {
 });
 document.addEventListener('keyup', e => { keys[e.key] = false; });
 
+// ===== TOUCH CONTROLS =====
+function bindTouch(btnId, key) {
+  const el = document.getElementById(btnId);
+  if (!el) return;
+  el.addEventListener('touchstart', e => { e.preventDefault(); keys[key] = true; }, { passive: false });
+  el.addEventListener('touchend',   () => { keys[key] = false; });
+  el.addEventListener('touchcancel',() => { keys[key] = false; });
+}
+
 // ===== INIT ON LOAD =====
 window.addEventListener('load', () => {
   domSteering  = document.getElementById('steering-wheel');
@@ -561,6 +584,12 @@ window.addEventListener('load', () => {
   domMessage   = document.getElementById('game-message');
 
   initScene();
+
+  // Bind touch controls
+  bindTouch('touch-left',  'ArrowLeft');
+  bindTouch('touch-right', 'ArrowRight');
+  bindTouch('touch-up',    'ArrowUp');
+  bindTouch('touch-down',  'ArrowDown');
 
   // Level button toggle
   document.querySelectorAll('.level-btn').forEach(btn => {

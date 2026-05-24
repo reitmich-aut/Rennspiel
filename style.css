@@ -38,7 +38,10 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 8px 12px 6px;
+  padding: 4px 6px;
+  height: 100dvh;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
 #hud {
@@ -62,11 +65,15 @@ body {
 
 #canvas-wrapper {
   position: relative;
+  flex: 1;
+  min-height: 0;
+  width: 100%;
   border: 4px solid var(--mc-border);
   border-bottom: 4px solid var(--mc-dark-dirt);
   border-right:  4px solid var(--mc-dark-dirt);
   line-height: 0;
   box-shadow: 4px 4px 0 #000;
+  overflow: hidden;
 }
 
 canvas { display: block; }
@@ -526,4 +533,90 @@ textarea { resize: vertical; min-height: 65px; }
   background: var(--mc-dirt);
   border-color: var(--mc-gold);
   color: var(--mc-gold);
+}
+
+/* ===== TOUCH CONTROLS (mobile) ===== */
+#touch-controls {
+  display: none;
+  flex-shrink: 0;
+  width: 100%;
+  height: 180px;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 24px;
+  gap: 12px;
+  box-sizing: border-box;
+}
+
+.touch-col {
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+  align-items: center;
+}
+
+.touch-btn {
+  width: 80px;
+  height: 80px;
+  font-size: 2rem;
+  background: var(--mc-panel);
+  color: var(--mc-gold);
+  border: 3px solid var(--mc-border);
+  border-bottom: 5px solid var(--mc-dark-dirt);
+  border-right:  5px solid var(--mc-dark-dirt);
+  cursor: pointer;
+  font-family: sans-serif;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-shadow: 2px 2px 0 #000;
+}
+.touch-btn:active {
+  border-bottom-width: 3px;
+  border-right-width:  3px;
+  transform: translate(2px, 2px);
+}
+
+/* Mobile controls line in overlay */
+.controls-mobile { display: none; }
+
+/* ===== RESPONSIVE: TOUCH DEVICES ===== */
+@media (pointer: coarse) {
+  #touch-controls   { display: flex; }
+  #controls-hint    { display: none; }
+  .controls-desktop { display: none; }
+  .controls-mobile  { display: block; }
+  #game-container   { align-items: stretch; }
+}
+
+/* ===== RESPONSIVE: SMALL PORTRAIT SCREENS ===== */
+@media (max-width: 500px) {
+  #hud {
+    font-size: 0.42rem;
+    gap: 6px;
+    padding: 3px 6px;
+    margin-bottom: 3px;
+  }
+  #dashboard {
+    height: 96px;
+    padding: 0 6px 5px;
+  }
+  #dash-left { min-width: 70px; }
+  #speedo-svg { width: 60px; height: 40px; }
+  #speed-num  { font-size: 0.8rem; }
+  #dash-center svg { width: 72px; height: 72px; }
+  #word-emoji { font-size: 1.6rem; }
+  #dash-right { min-width: 80px; gap: 3px; }
+  #word-display { max-width: 90px; gap: 2px; }
+  .letter-slot {
+    width: 14px;
+    height: 16px;
+    line-height: 16px;
+    font-size: 0.5rem;
+  }
+  .touch-btn { width: 72px; height: 72px; font-size: 1.6rem; }
+  #touch-controls { height: 160px; padding: 8px 16px; }
 }
