@@ -620,3 +620,40 @@ textarea { resize: vertical; min-height: 65px; }
   .touch-btn { width: 72px; height: 72px; font-size: 1.6rem; }
   #touch-controls { height: 160px; padding: 8px 16px; }
 }
+
+/* ===== TRACK SELECTION ===== */
+#track-select { text-align: center; margin-top: 4px; }
+
+#track-select > p {
+  color: var(--mc-gold);
+  font-size: 0.6rem;
+  margin-bottom: 7px;
+  text-shadow: 2px 2px 0 #5C4A00;
+}
+
+.track-btns {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.track-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-width: 110px;
+  padding: 7px 10px !important;
+}
+
+.track-title { font-size: 0.56rem; }
+.track-desc  { font-size: 0.42rem; color: rgba(255,255,255,0.7); line-height: 1.4; }
+
+.track-btn.active {
+  background: var(--mc-grass) !important;
+  border-bottom-color: #3A5A1A !important;
+  border-right-color:  #3A5A1A !important;
+  color: #fff !important;
+}
+.track-btn.active .track-desc { color: rgba(255,255,255,0.8) !important; }
